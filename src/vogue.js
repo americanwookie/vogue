@@ -24,13 +24,13 @@ var options = getOptions()
   , socket  = io.listen(server)
   , watcher = new Watcher(options.webDirectory,options.rewrite);
 
-server.listen(options.port);
+server.listen(options.port,options.host);
 socket.on('connection', function(clientSocket) {
   watcher.addClient(new VogueClient(clientSocket, watcher));
 });
 
 console.log('Watching directory: ' + options.webDirectory);
-console.log('Listening for clients: http://localhost:' + options.port + '/');
+console.log('Listening for clients: http://' + options.host + ':' + options.port + '/');
 
 
 function handleHttpRequest(request, response) {
@@ -46,6 +46,7 @@ function sendAboutPage(response) {
   fs.readFile(__dirname + '/client/about.htm', function(e, fileData) {
     var html = fileData.toString();
     html = html.replace(/\{port\}/g, options.port.toString());
+    html = html.replace(/\{host\}/g, options.host);
     response.writeHead(200, { 'Content-Type': 'text/html' });
     response.write(html);
     response.end();
@@ -73,6 +74,12 @@ function getOptions() {
   function createOptionParser() {
     var parser = new opt.OptionParser({
       options: [
+        { 
+          name: ['--host'],
+          type: 'string',
+          help: 'Host (IP Address) to run Vogue server on',
+          'default': '127.0.0.1'
+        },
         {
           name: ['--port', '-p'],
           type: 'int',
